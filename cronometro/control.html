@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, height=1080">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+<title>Politon - Control Cronometro</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  :root {
+    --bg:#060e1c;
+    --panel:#0a1525;
+    --panel2:#0d1a2b;
+    --gold:#C4A055;
+    --cream:#E8DCC8;
+    --muted:#B8A88A;
+    --green:#2EBC6F;
+    --red:#E14646;
+    --yellow:#F2C94C;
+  }
+  html, body {
+    width:1920px;
+    height:1080px;
+    overflow:hidden;
+    background:var(--bg);
+    color:var(--cream);
+    font-family:'Libre Baskerville',serif;
+  }
+  body::before {
+    content:'';
+    position:absolute;
+    inset:0;
+    background:
+      radial-gradient(ellipse 48% 68% at 10% 18%, rgba(196,160,85,.11), transparent 66%),
+      repeating-linear-gradient(90deg, transparent 0, transparent 59px, rgba(196,160,85,.035) 59px, rgba(196,160,85,.035) 60px);
+    pointer-events:none;
+  }
+  .shell {
+    position:absolute;
+    inset:54px 72px;
+    display:grid;
+    grid-template-columns:560px 1fr;
+    gap:30px;
+  }
+  .panel {
+    position:relative;
+    background:rgba(10,21,37,.96);
+    border:1px solid rgba(196,160,85,.45);
+    box-shadow:0 0 22px rgba(0,0,0,.34), inset 0 0 16px rgba(196,160,85,.05);
+    padding:30px;
+  }
+  .panel::before,
+  .panel::after {
+    content:'';
+    position:absolute;
+    width:24px;
+    height:24px;
+    border-color:var(--gold);
+    border-style:solid;
+    opacity:.7;
+  }
+  .panel::before { top:10px; left:10px; border-width:2px 0 0 2px; }
+  .panel::after { right:10px; bottom:10px; border-width:0 2px 2px 0; }
+  .eyebrow {
+    margin-bottom:12px;
+    color:rgba(196,160,85,.76);
+    font-size:12px;
+    letter-spacing:.32em;
+    text-transform:uppercase;
+  }
+  .title {
+    font-family:'Playfair Display',serif;
+    font-size:45px;
+    line-height:1;
+    text-transform:uppercase;
+    text-shadow:0 0 18px rgba(196,160,85,.34);
+  }
+  .preview {
+    margin-top:36px;
+    height:330px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:rgba(6,14,28,.72);
+    border:1px solid rgba(196,160,85,.26);
+  }
+  .preview-time {
+    font-family:'Playfair Display',serif;
+    font-size:96px;
+    line-height:1;
+    font-weight:900;
+    font-variant-numeric:tabular-nums;
+    text-shadow:0 0 22px rgba(196,160,85,.36);
+  }
+  .preview-time.warning { color:var(--red); }
+  .meta-grid {
+    margin-top:18px;
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:12px;
+  }
+  .meta {
+    min-height:86px;
+    padding:14px 10px;
+    text-align:center;
+    background:rgba(6,14,28,.7);
+    border:1px solid rgba(196,160,85,.24);
+  }
+  .meta-value {
+    font-family:'Playfair Display',serif;
+    font-size:34px;
+    font-weight:900;
+    line-height:1;
+  }
+  .meta-label {
+    margin-top:8px;
+    color:rgba(184,168,138,.7);
+    font-size:10px;
+    letter-spacing:.2em;
+    text-transform:uppercase;
+  }
+  .group { margin-top:28px; }
+  .group-title {
+    margin-bottom:12px;
+    color:rgba(196,160,85,.76);
+    font-size:12px;
+    letter-spacing:.24em;
+    text-transform:uppercase;
+  }
+  .segmented {
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+  }
+  .btn,
+  .mode-btn {
+    height:64px;
+    border-radius:3px;
+    border:1px solid rgba(196,160,85,.45);
+    background:rgba(196,160,85,.12);
+    color:var(--gold);
+    font-family:'Libre Baskerville',serif;
+    font-size:15px;
+    font-weight:700;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    cursor:pointer;
+  }
+  .btn:hover,
+  .mode-btn:hover { filter:brightness(1.18); }
+  .mode-btn.active {
+    background:rgba(196,160,85,.28);
+    color:var(--cream);
+    box-shadow:inset 0 0 12px rgba(196,160,85,.16);
+  }
+  .actions {
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:14px;
+  }
+  .btn.play { border-color:rgba(46,188,111,.75); background:rgba(46,188,111,.18); color:#8FF0BC; }
+  .btn.pause { border-color:rgba(242,201,76,.78); background:rgba(242,201,76,.18); color:#FFE08A; }
+  .btn.reset { border-color:rgba(225,70,70,.78); background:rgba(225,70,70,.16); color:#FF9C9C; }
+  .form-grid {
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+  }
+  .field {
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .field.wide { grid-column:1 / -1; }
+  label {
+    color:rgba(184,168,138,.78);
+    font-size:11px;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+  }
+  input {
+    height:56px;
+    background:#081120;
+    border:1px solid rgba(196,160,85,.38);
+    color:var(--cream);
+    border-radius:3px;
+    outline:none;
+    font-family:'Libre Baskerville',serif;
+    font-size:20px;
+    padding:0 14px;
+  }
+  input:focus {
+    border-color:var(--gold);
+    box-shadow:0 0 10px rgba(196,160,85,.24);
+  }
+  .quick {
+    display:grid;
+    grid-template-columns:repeat(6, 1fr);
+    gap:10px;
+  }
+  .quick .btn { height:52px; font-size:13px; }
+  .hint {
+    margin-top:22px;
+    color:rgba(184,168,138,.62);
+    font-size:11px;
+    letter-spacing:.13em;
+    text-transform:uppercase;
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="panel">
+    <div class="eyebrow">Produccion</div>
+    <div class="title">Control Tiempo</div>
+    <div class="preview">
+      <div class="preview-time" id="preview-time">00:00:00</div>
+    </div>
+    <div class="meta-grid">
+      <div class="meta"><div class="meta-value" id="mode-meta">CR</div><div class="meta-label">Modo</div></div>
+      <div class="meta"><div class="meta-value" id="status-meta">OFF</div><div class="meta-label">Estado</div></div>
+      <div class="meta"><div class="meta-value" id="target-meta">00</div><div class="meta-label">Minutos</div></div>
+    </div>
+  </aside>
+
+  <main class="panel">
+    <section class="group">
+      <div class="group-title">Modo</div>
+      <div class="segmented">
+        <button class="mode-btn active" id="mode-stopwatch" type="button">Cronometro</button>
+        <button class="mode-btn" id="mode-timer" type="button">Timer</button>
+      </div>
+    </section>
+
+    <section class="group">
+      <div class="group-title">Control</div>
+      <div class="actions">
+        <button class="btn play" id="btn-start" type="button">Iniciar</button>
+        <button class="btn pause" id="btn-pause" type="button">Pausar</button>
+        <button class="btn reset" id="btn-reset" type="button">Reset</button>
+      </div>
+    </section>
+
+    <section class="group">
+      <div class="group-title">Configuracion</div>
+      <div class="form-grid">
+        <div class="field">
+          <label for="time-input">Tiempo timer</label>
+          <input id="time-input" type="text" value="05:00" placeholder="MM:SS o HH:MM:SS" spellcheck="false">
+        </div>
+        <div class="field">
+          <label for="offset-input">Set cronometro</label>
+          <input id="offset-input" type="text" value="00:00" placeholder="MM:SS o HH:MM:SS" spellcheck="false">
+        </div>
+        <div class="field wide">
+          <label for="label-input">Etiqueta interna</label>
+          <input id="label-input" type="text" value="Cronometro" spellcheck="false">
+        </div>
+      </div>
+    </section>
+
+    <section class="group">
+      <div class="group-title">Timers rapidos</div>
+      <div class="quick">
+        <button class="btn" data-minutes="1" type="button">1 min</button>
+        <button class="btn" data-minutes="3" type="button">3 min</button>
+        <button class="btn" data-minutes="5" type="button">5 min</button>
+        <button class="btn" data-minutes="10" type="button">10 min</button>
+        <button class="btn" data-minutes="15" type="button">15 min</button>
+        <button class="btn" data-minutes="30" type="button">30 min</button>
+      </div>
+    </section>
+
+    <div class="hint">Atajos: espacio iniciar/pausar - R reset - C cronometro - T timer - Enter aplica tiempos</div>
+  </main>
+</div>
+
+<script>
+const STORAGE_KEY = 'politon-cronometro-state-v1';
+const CHANNEL_NAME = 'politon-cronometro-live';
+const channel = 'BroadcastChannel' in window ? new BroadcastChannel(CHANNEL_NAME) : null;
+
+const defaults = {
+  mode: 'stopwatch',
+  running: false,
+  baseElapsed: 0,
+  duration: 300,
+  startedAt: 0,
+  updatedAt: Date.now(),
+  label: 'Cronometro'
+};
+
+let state = loadState();
+
+const els = {
+  preview: document.getElementById('preview-time'),
+  modeMeta: document.getElementById('mode-meta'),
+  statusMeta: document.getElementById('status-meta'),
+  targetMeta: document.getElementById('target-meta'),
+  modeStopwatch: document.getElementById('mode-stopwatch'),
+  modeTimer: document.getElementById('mode-timer'),
+  timeInput: document.getElementById('time-input'),
+  offsetInput: document.getElementById('offset-input'),
+  labelInput: document.getElementById('label-input')
+};
+
+function loadState() {
+  try {
+    return { ...defaults, ...JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}') };
+  } catch (err) {
+    return { ...defaults };
+  }
+}
+
+function publish() {
+  state.updatedAt = Date.now();
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  if (channel) channel.postMessage(state);
+}
+
+function parseDuration(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return 0;
+  if (/^\d+$/.test(raw)) return Number(raw);
+  const parts = raw.split(':').map(part => Number(part));
+  if (parts.some(Number.isNaN)) return 0;
+  if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+  if (parts.length === 2) return parts[0] * 60 + parts[1];
+  return parts[0] || 0;
+}
+
+function pad(value) {
+  return String(value).padStart(2, '0');
+}
+
+function formatTime(seconds) {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  return `${pad(h)}:${pad(m)}:${pad(s)}`;
+}
+
+function formatInput(seconds) {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  return h > 0 ? `${pad(h)}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`;
+}
+
+function currentElapsed() {
+  const extra = state.running ? Math.floor((Date.now() - state.startedAt) / 1000) : 0;
+  return state.baseElapsed + extra;
+}
+
+function currentSeconds() {
+  if (state.mode === 'timer') return Math.max(0, state.duration - currentElapsed());
+  return Math.max(0, currentElapsed());
+}
+
+function setMode(mode) {
+  pause();
+  state.mode = mode;
+  state.baseElapsed = 0;
+  state.startedAt = 0;
+  state.label = mode === 'timer' ? 'Timer' : 'Cronometro';
+  els.labelInput.value = state.label;
+  publish();
+  render();
+}
+
+function applyInputs() {
+  pause();
+  state.duration = Math.max(0, parseDuration(els.timeInput.value));
+  state.label = els.labelInput.value.trim() || (state.mode === 'timer' ? 'Timer' : 'Cronometro');
+  if (state.mode === 'stopwatch') {
+    state.baseElapsed = Math.max(0, parseDuration(els.offsetInput.value));
+  } else {
+    state.baseElapsed = 0;
+  }
+  state.startedAt = 0;
+  publish();
+  render();
+}
+
+function start() {
+  if (state.running) return;
+  applyInputs();
+  if (state.mode === 'timer' && state.duration <= 0) return;
+  state.running = true;
+  state.startedAt = Date.now();
+  publish();
+  render();
+}
+
+function pause() {
+  if (!state.running) return;
+  state.baseElapsed = currentElapsed();
+  state.running = false;
+  state.startedAt = 0;
+  publish();
+}
+
+function reset() {
+  state.running = false;
+  state.baseElapsed = state.mode === 'stopwatch' ? Math.max(0, parseDuration(els.offsetInput.value)) : 0;
+  state.startedAt = 0;
+  publish();
+  render();
+}
+
+function render() {
+  const seconds = currentSeconds();
+  const finished = state.mode === 'timer' && seconds === 0 && (state.running || currentElapsed() >= state.duration);
+  els.preview.textContent = formatTime(seconds);
+  els.preview.classList.toggle('warning', finished || (state.mode === 'timer' && seconds <= 10 && state.duration > 10));
+  els.modeMeta.textContent = state.mode === 'timer' ? 'TM' : 'CR';
+  els.statusMeta.textContent = finished ? 'FIN' : (state.running ? 'ON' : 'OFF');
+  els.targetMeta.textContent = pad(Math.floor(state.duration / 60));
+  els.modeStopwatch.classList.toggle('active', state.mode === 'stopwatch');
+  els.modeTimer.classList.toggle('active', state.mode === 'timer');
+}
+
+document.getElementById('btn-start').addEventListener('click', start);
+document.getElementById('btn-pause').addEventListener('click', () => { pause(); render(); });
+document.getElementById('btn-reset').addEventListener('click', reset);
+els.modeStopwatch.addEventListener('click', () => setMode('stopwatch'));
+els.modeTimer.addEventListener('click', () => setMode('timer'));
+els.timeInput.addEventListener('keydown', event => {
+  if (event.key === 'Enter') applyInputs();
+});
+els.offsetInput.addEventListener('keydown', event => {
+  if (event.key === 'Enter') applyInputs();
+});
+els.labelInput.addEventListener('keydown', event => {
+  if (event.key === 'Enter') applyInputs();
+});
+
+document.querySelectorAll('[data-minutes]').forEach(button => {
+  button.addEventListener('click', () => {
+    const minutes = Number(button.dataset.minutes);
+    pause();
+    state.mode = 'timer';
+    state.duration = minutes * 60;
+    state.baseElapsed = 0;
+    state.startedAt = 0;
+    state.label = 'Timer';
+    els.timeInput.value = formatInput(state.duration);
+    els.labelInput.value = state.label;
+    publish();
+    render();
+  });
+});
+
+document.addEventListener('keydown', event => {
+  const tag = document.activeElement.tagName;
+  if (tag === 'INPUT') return;
+  if (event.code === 'Space') {
+    event.preventDefault();
+    state.running ? pause() : start();
+    render();
+  }
+  if (event.code === 'KeyR') reset();
+  if (event.code === 'KeyC') setMode('stopwatch');
+  if (event.code === 'KeyT') setMode('timer');
+});
+
+els.timeInput.value = formatInput(state.duration);
+els.offsetInput.value = formatInput(state.mode === 'stopwatch' ? state.baseElapsed : 0);
+els.labelInput.value = state.label;
+publish();
+render();
+setInterval(render, 250);
+</script>
+</body>
+</html>

@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+<title>Politon - Overlay Entrevistas</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body {
+    width:1920px; height:1080px;
+    overflow:hidden;
+    background:transparent;
+    font-family:"Libre Baskerville", Georgia, serif;
+  }
+  body.chroma { background:#00ff00; }
+
+  .lower-third {
+    position:absolute;
+    left:74px;
+    right:auto;
+    bottom:74px;
+    width:790px;
+    min-height:154px;
+    display:grid;
+    grid-template-columns:18px 1fr;
+    filter:drop-shadow(0 18px 28px rgba(0,0,0,.42));
+  }
+
+  body.side-right .lower-third {
+    left:auto;
+    right:74px;
+    grid-template-columns:1fr 18px;
+  }
+
+  body.side-right .gold-bar { grid-column:2; grid-row:1; }
+  body.side-right .plate { grid-column:1; grid-row:1; }
+
+  .gold-bar {
+    width:18px;
+    background:#C4A055;
+    border-top:2px solid rgba(255,255,255,.18);
+    border-bottom:2px solid rgba(0,0,0,.25);
+  }
+
+  .plate {
+    position:relative;
+    padding:28px 42px 24px 34px;
+    background:linear-gradient(135deg,rgba(6,14,28,.98) 0%,rgba(12,26,46,.96) 100%);
+    border:1.5px solid rgba(196,160,85,.76);
+    border-left:none;
+  }
+
+  body.side-right .plate {
+    padding:28px 34px 24px 42px;
+    border-left:1.5px solid rgba(196,160,85,.76);
+    border-right:none;
+    text-align:right;
+  }
+
+  .plate::before {
+    content:"";
+    position:absolute;
+    inset:9px;
+    border:1px solid rgba(196,160,85,.24);
+    pointer-events:none;
+  }
+
+  .plate::after {
+    content:"";
+    position:absolute;
+    right:22px;
+    top:18px;
+    width:106px;
+    height:4px;
+    background:#C4A055;
+    opacity:.82;
+  }
+
+  body.side-right .plate::after {
+    right:auto;
+    left:22px;
+  }
+
+  .corner {
+    position:absolute;
+    width:24px;
+    height:24px;
+    pointer-events:none;
+  }
+  .corner.tl { top:-1.5px; left:-18px; border-top:3px solid #C4A055; border-left:3px solid #C4A055; }
+  .corner.br { right:-1.5px; bottom:-1.5px; border-right:3px solid #C4A055; border-bottom:3px solid #C4A055; }
+  body.side-right .corner.tl { left:-1.5px; border-left:none; }
+  body.side-right .corner.br { right:-18px; border-right:3px solid #C4A055; }
+
+  .name {
+    position:relative;
+    z-index:1;
+    max-width:660px;
+    color:#f7f0df;
+    font-family:"Playfair Display", Georgia, serif;
+    font-size:52px;
+    line-height:1.02;
+    font-weight:900;
+    letter-spacing:0;
+    text-transform:uppercase;
+    text-wrap:balance;
+  }
+
+  body.side-right .name {
+    margin-left:auto;
+  }
+
+  .role {
+    position:relative;
+    z-index:1;
+    margin-top:9px;
+    color:#C4A055;
+    font-size:24px;
+    line-height:1.2;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:0;
+  }
+
+  .controls {
+    position:absolute;
+    top:28px;
+    right:28px;
+    width:380px;
+    padding:18px;
+    display:grid;
+    gap:12px;
+    color:#f7f0df;
+    background:rgba(6,14,28,.94);
+    border:1px solid rgba(196,160,85,.55);
+    font:16px/1.3 Arial, sans-serif;
+  }
+
+  .controls label {
+    display:grid;
+    gap:6px;
+    color:#C4A055;
+    font-weight:700;
+  }
+
+  .controls input {
+    width:100%;
+    padding:10px 12px;
+    color:#f7f0df;
+    background:#0b1525;
+    border:1px solid rgba(196,160,85,.44);
+    font:16px/1.2 Arial, sans-serif;
+    outline:none;
+  }
+
+  .button-row {
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+  }
+
+  .controls button {
+    min-height:38px;
+    color:#060e1c;
+    background:#C4A055;
+    border:none;
+    font:700 14px/1 Arial, sans-serif;
+    cursor:pointer;
+  }
+
+  .capture .controls { display:none; }
+  .capture .name, .capture .role { cursor:text; }
+</style>
+</head>
+<body class="chroma">
+<main class="lower-third" aria-label="Zocalo de entrevista">
+  <div class="gold-bar"></div>
+  <section class="plate">
+    <div class="corner tl"></div>
+    <div class="corner br"></div>
+    <h1 class="name" id="name" contenteditable="true" spellcheck="false">Fransisco Micelli</h1>
+    <p class="role" id="role" contenteditable="true" spellcheck="false">Entrevistador</p>
+  </section>
+</main>
+
+<aside class="controls" aria-label="Controles de edicion">
+  <label>
+    Nombre
+    <input id="nameInput" value="Fransisco Micelli">
+  </label>
+  <label>
+    Rol
+    <input id="roleInput" value="Entrevistador">
+  </label>
+  <div class="button-row">
+    <button id="interviewer">Entrevistador</button>
+    <button id="interviewee">Entrevistado</button>
+  </div>
+  <div class="button-row">
+    <button id="leftSide">Izquierda</button>
+    <button id="rightSide">Derecha</button>
+  </div>
+  <button id="flipSide">Voltear lado</button>
+  <div class="button-row">
+    <button id="toggleBg">Fondo verde</button>
+    <button id="capture">Captura</button>
+  </div>
+</aside>
+
+<script>
+const p = new URLSearchParams(location.search);
+const $ = (id) => document.getElementById(id);
+const nameEl = $("name");
+const roleEl = $("role");
+const nameInput = $("nameInput");
+const roleInput = $("roleInput");
+
+function setSide(side) {
+  document.body.classList.toggle("side-right", side === "right");
+}
+
+function flipSide() {
+  setSide(document.body.classList.contains("side-right") ? "left" : "right");
+}
+
+function setText(name, role) {
+  nameEl.textContent = name;
+  roleEl.textContent = role;
+  nameInput.value = name;
+  roleInput.value = role;
+}
+
+setText(p.get("name") || p.get("n") || "Fransisco Micelli", p.get("role") || p.get("r") || "Entrevistador");
+setSide(p.get("side") === "right" || p.get("lado") === "derecha" ? "right" : "left");
+if (p.get("bg") === "transparent") document.body.classList.remove("chroma");
+
+nameInput.addEventListener("input", () => nameEl.textContent = nameInput.value || " ");
+roleInput.addEventListener("input", () => roleEl.textContent = roleInput.value || " ");
+nameEl.addEventListener("input", () => nameInput.value = nameEl.textContent.trim());
+roleEl.addEventListener("input", () => roleInput.value = roleEl.textContent.trim());
+
+$("interviewer").addEventListener("click", () => setText(nameInput.value || "Fransisco Micelli", "Entrevistador"));
+$("interviewee").addEventListener("click", () => setText(nameInput.value || "Nombre Apellido", "Entrevistado"));
+$("leftSide").addEventListener("click", () => setSide("left"));
+$("rightSide").addEventListener("click", () => setSide("right"));
+$("flipSide").addEventListener("click", flipSide);
+$("toggleBg").addEventListener("click", () => document.body.classList.toggle("chroma"));
+$("capture").addEventListener("click", () => document.body.classList.toggle("capture"));
+
+document.addEventListener("keydown", (event) => {
+  if (event.key.toLowerCase() === "c") document.body.classList.toggle("capture");
+  if (event.key.toLowerCase() === "g") document.body.classList.toggle("chroma");
+  if (event.key.toLowerCase() === "f") flipSide();
+});
+</script>
+</body>
+</html>

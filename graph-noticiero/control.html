@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, height=1080">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet">
+<title>Politon - Control Graph Noticiero</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  :root {
+    --bg:#060e1c;
+    --panel:#0a1525;
+    --blue:#0a1525;
+    --blue2:#102b55;
+    --gold:#C4A055;
+    --cream:#E8DCC8;
+    --muted:#B8A88A;
+    --green:#2EBC6F;
+    --red:#E14646;
+  }
+  html, body {
+    width:1920px;
+    height:1080px;
+    overflow:hidden;
+    background:var(--bg);
+    color:var(--cream);
+    font-family:'Roboto Condensed', Arial, sans-serif;
+  }
+  body::before {
+    content:'';
+    position:absolute;
+    inset:0;
+    background:
+      radial-gradient(ellipse 55% 72% at 13% 18%, rgba(196,160,85,.11), transparent 65%),
+      repeating-linear-gradient(90deg, transparent 0, transparent 59px, rgba(196,160,85,.035) 59px, rgba(196,160,85,.035) 60px);
+    pointer-events:none;
+  }
+  .shell {
+    position:absolute;
+    inset:48px 70px;
+    display:grid;
+    grid-template-columns:610px 1fr;
+    gap:30px;
+  }
+  .panel {
+    position:relative;
+    background:rgba(10,21,37,.96);
+    border:1px solid rgba(196,160,85,.45);
+    box-shadow:0 0 22px rgba(0,0,0,.34), inset 0 0 16px rgba(196,160,85,.05);
+    padding:28px;
+  }
+  .panel::before,
+  .panel::after {
+    content:'';
+    position:absolute;
+    width:24px;
+    height:24px;
+    border-color:var(--gold);
+    border-style:solid;
+    opacity:.7;
+  }
+  .panel::before { top:10px; left:10px; border-width:2px 0 0 2px; }
+  .panel::after { right:10px; bottom:10px; border-width:0 2px 2px 0; }
+  .eyebrow {
+    margin-bottom:12px;
+    color:rgba(196,160,85,.76);
+    font-size:14px;
+    letter-spacing:.32em;
+    text-transform:uppercase;
+  }
+  .title {
+    font-family:'Montserrat', Arial, sans-serif;
+    font-size:42px;
+    line-height:1;
+    font-weight:900;
+    text-transform:uppercase;
+    text-shadow:0 0 18px rgba(196,160,85,.34);
+  }
+  .preview {
+    position:relative;
+    margin-top:34px;
+    height:360px;
+    background:#060e1c;
+    border:1px solid rgba(196,160,85,.25);
+    overflow:hidden;
+  }
+  .mini {
+    position:absolute;
+    left:34px;
+    right:34px;
+    bottom:54px;
+    height:86px;
+    filter:drop-shadow(0 8px 8px rgba(0,0,0,.55));
+  }
+  .mini-main {
+    position:absolute;
+    left:54px;
+    right:18px;
+    top:24px;
+    height:44px;
+    background:linear-gradient(90deg, #b8a88a, #f3ead7 30%, #9b8554);
+    clip-path:polygon(3% 0, 100% 0, 96% 100%, 0 100%);
+  }
+  .mini-tag {
+    position:absolute;
+    left:24px;
+    top:24px;
+    width:130px;
+    height:44px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:linear-gradient(180deg, #102b55, #060e1c);
+    clip-path:polygon(0 0, 94% 0, 100% 100%, 4% 100%);
+    color:#E8DCC8;
+    font-family:'Montserrat', Arial, sans-serif;
+    font-weight:900;
+    font-size:18px;
+    text-transform:uppercase;
+    overflow:hidden;
+  }
+  .mini-tag::after {
+    content:'';
+    position:relative;
+    z-index:2;
+    width:62px;
+    height:42px;
+    background:url('../files/Polito.png') center bottom / contain no-repeat;
+    filter:drop-shadow(0 4px 4px rgba(0,0,0,.42));
+  }
+  .mini-headline {
+    position:absolute;
+    left:92px;
+    right:110px;
+    top:32px;
+    color:#050d3f;
+    font-family:'Montserrat', Arial, sans-serif;
+    font-size:23px;
+    font-weight:900;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    text-transform:uppercase;
+  }
+  .mini-live {
+    position:absolute;
+    right:18px;
+    top:24px;
+    width:94px;
+    height:44px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:linear-gradient(180deg, #102b55, #060e1c);
+    color:#E8DCC8;
+    clip-path:polygon(14% 0, 100% 0, 92% 100%, 0 100%);
+    font-family:'Montserrat', Arial, sans-serif;
+    font-size:20px;
+    font-weight:900;
+  }
+  .mini-ticker {
+    position:absolute;
+    left:64px;
+    right:50px;
+    bottom:0;
+    height:17px;
+    background:#0a1525;
+    border-top:1px solid rgba(196,160,85,.72);
+    clip-path:polygon(2% 0, 100% 0, 98.5% 100%, 0 100%);
+  }
+  .mini-polito {
+    display:none;
+  }
+  .state-grid {
+    margin-top:18px;
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:12px;
+  }
+  .state {
+    min-height:78px;
+    padding:12px;
+    text-align:center;
+    background:rgba(6,14,28,.75);
+    border:1px solid rgba(196,160,85,.24);
+  }
+  .state-value {
+    color:#fff;
+    font-family:'Montserrat', Arial, sans-serif;
+    font-size:28px;
+    font-weight:900;
+    line-height:1;
+  }
+  .state-label {
+    margin-top:8px;
+    color:rgba(184,168,138,.72);
+    font-size:11px;
+    letter-spacing:.2em;
+    text-transform:uppercase;
+  }
+  .group { margin-top:24px; }
+  .group-title {
+    margin-bottom:12px;
+    color:rgba(196,160,85,.76);
+    font-size:13px;
+    letter-spacing:.24em;
+    text-transform:uppercase;
+  }
+  .segmented,
+  .actions {
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:12px;
+  }
+  button {
+    height:58px;
+    border-radius:3px;
+    border:1px solid rgba(196,160,85,.45);
+    background:rgba(196,160,85,.12);
+    color:var(--gold);
+    font-family:'Roboto Condensed', Arial, sans-serif;
+    font-size:17px;
+    font-weight:700;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    cursor:pointer;
+  }
+  button:hover { filter:brightness(1.18); }
+  button.active {
+    color:#fff;
+    border-color:rgba(196,160,85,.8);
+    background:linear-gradient(180deg, rgba(196,160,85,.28), rgba(10,21,37,.8));
+  }
+  button.on { border-color:rgba(46,188,111,.75); background:rgba(46,188,111,.18); color:#8FF0BC; }
+  button.off { border-color:rgba(225,70,70,.78); background:rgba(225,70,70,.16); color:#FF9C9C; }
+  .form-grid {
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+  }
+  .field {
+    display:flex;
+    flex-direction:column;
+    gap:7px;
+  }
+  .field.wide { grid-column:1 / -1; }
+  label {
+    color:rgba(184,168,138,.78);
+    font-size:11px;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+  }
+  input, textarea {
+    background:#081120;
+    border:1px solid rgba(196,160,85,.38);
+    color:var(--cream);
+    border-radius:3px;
+    outline:none;
+    font-family:'Roboto Condensed', Arial, sans-serif;
+    font-size:24px;
+    padding:10px 12px;
+  }
+  input { height:54px; }
+  textarea {
+    height:86px;
+    resize:none;
+    line-height:1.12;
+  }
+  input:focus,
+  textarea:focus {
+    border-color:var(--gold);
+    box-shadow:0 0 10px rgba(196,160,85,.24);
+  }
+  .templates {
+    display:grid;
+    grid-template-columns:repeat(4, 1fr);
+    gap:10px;
+  }
+  .templates button {
+    height:48px;
+    font-size:14px;
+  }
+  .hint {
+    margin-top:18px;
+    color:rgba(184,168,138,.62);
+    font-size:11px;
+    letter-spacing:.13em;
+    text-transform:uppercase;
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="panel">
+    <div class="eyebrow">Produccion</div>
+    <div class="title">Graph Noticiero</div>
+    <div class="preview">
+      <div class="mini">
+        <div class="mini-polito"></div>
+        <div class="mini-main"></div>
+        <div class="mini-tag" id="mini-tag"></div>
+        <div class="mini-headline" id="mini-headline">Ultimo momento</div>
+        <div class="mini-live" id="mini-live">Live</div>
+        <div class="mini-ticker"></div>
+      </div>
+    </div>
+    <div class="state-grid">
+      <div class="state"><div class="state-value" id="visible-state">ON</div><div class="state-label">Aire</div></div>
+      <div class="state"><div class="state-value" id="variant-state">BRK</div><div class="state-label">Estilo</div></div>
+      <div class="state"><div class="state-value" id="live-state">LIVE</div><div class="state-label">Vivo</div></div>
+    </div>
+  </aside>
+
+  <main class="panel">
+    <section class="group">
+      <div class="group-title">Estilo</div>
+      <div class="segmented">
+        <button id="variant-breaking" type="button">Breaking</button>
+        <button id="variant-headline" type="button">Headline</button>
+        <button id="variant-simple" type="button">Zocalo</button>
+      </div>
+    </section>
+
+    <section class="group">
+      <div class="group-title">Aire</div>
+      <div class="actions">
+        <button class="on" id="btn-show" type="button">Mostrar</button>
+        <button class="off" id="btn-hide" type="button">Ocultar</button>
+        <button id="btn-live" type="button">Live On/Off</button>
+      </div>
+    </section>
+
+    <section class="group">
+      <div class="group-title">Texto</div>
+      <div class="form-grid">
+        <div class="field">
+          <label for="tag-input">Etiqueta</label>
+          <input id="tag-input" type="text" value="Breaking News" spellcheck="false">
+        </div>
+        <div class="field">
+          <label for="time-input">Hora</label>
+          <input id="time-input" type="text" placeholder="Auto" spellcheck="false">
+        </div>
+        <div class="field wide">
+          <label for="headline-input">Titulo</label>
+          <input id="headline-input" type="text" value="Ultimo momento" spellcheck="false">
+        </div>
+        <div class="field wide">
+          <label for="subhead-input">Bajada</label>
+          <input id="subhead-input" type="text" value="Informacion en desarrollo" spellcheck="false">
+        </div>
+        <div class="field wide">
+          <label for="ticker-input">Ticker</label>
+          <textarea id="ticker-input" spellcheck="false">NewsLine informacion de ultimo momento para la transmision en vivo.</textarea>
+        </div>
+      </div>
+    </section>
+
+    <section class="group">
+      <div class="group-title">Plantillas rapidas</div>
+      <div class="templates">
+        <button data-template="breaking" type="button">Ultimo</button>
+        <button data-template="mobile" type="button">Movil</button>
+        <button data-template="interview" type="button">Entrevista</button>
+        <button data-template="sports" type="button">Deportes</button>
+      </div>
+    </section>
+
+    <div class="hint">Atajos: espacio mostrar/ocultar - 1 breaking - 2 headline - 3 zocalo - L live - Enter aplica texto</div>
+  </main>
+</div>
+
+<script>
+const STORAGE_KEY = 'politon-news-graph-state-v1';
+const CHANNEL_NAME = 'politon-news-graph-live';
+const channel = 'BroadcastChannel' in window ? new BroadcastChannel(CHANNEL_NAME) : null;
+
+const defaults = {
+  visible: true,
+  variant: 'breaking',
+  tag: 'Breaking News',
+  headline: 'Ultimo momento',
+  subhead: 'Informacion en desarrollo',
+  ticker: 'NewsLine informacion de ultimo momento para la transmision en vivo.',
+  time: '',
+  live: true
+};
+
+const templates = {
+  breaking: {
+    variant: 'breaking',
+    tag: 'Breaking News',
+    headline: 'Ultimo momento',
+    subhead: 'Informacion en desarrollo',
+    ticker: 'NewsLine ampliamos la informacion durante la transmision en vivo.',
+    live: true
+  },
+  mobile: {
+    variant: 'headline',
+    tag: 'Breaking',
+    headline: 'Movil en vivo',
+    subhead: 'Reporte desde exteriores',
+    ticker: 'Contacto en directo con nuestro equipo en el lugar de los hechos.',
+    live: false
+  },
+  interview: {
+    variant: 'simple',
+    tag: 'Live Interview',
+    headline: 'Entrevista central',
+    subhead: 'Analisis y contexto',
+    ticker: 'Fuente: produccion Politon.',
+    live: false
+  },
+  sports: {
+    variant: 'breaking',
+    tag: 'Live HD',
+    headline: 'Resultado confirmado',
+    subhead: 'Cobertura especial',
+    ticker: 'Toda la actualidad deportiva en vivo.',
+    live: true
+  }
+};
+
+let state = loadState();
+
+const els = {
+  miniTag: document.getElementById('mini-tag'),
+  miniHeadline: document.getElementById('mini-headline'),
+  miniLive: document.getElementById('mini-live'),
+  visibleState: document.getElementById('visible-state'),
+  variantState: document.getElementById('variant-state'),
+  liveState: document.getElementById('live-state'),
+  tag: document.getElementById('tag-input'),
+  headline: document.getElementById('headline-input'),
+  subhead: document.getElementById('subhead-input'),
+  ticker: document.getElementById('ticker-input'),
+  time: document.getElementById('time-input')
+};
+
+function loadState() {
+  try {
+    return { ...defaults, ...JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}') };
+  } catch (err) {
+    return { ...defaults };
+  }
+}
+
+function publish() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  if (channel) channel.postMessage(state);
+}
+
+function applyForm() {
+  state.tag = els.tag.value.trim() || defaults.tag;
+  state.headline = els.headline.value.trim() || defaults.headline;
+  state.subhead = els.subhead.value.trim() || defaults.subhead;
+  state.ticker = els.ticker.value.trim() || defaults.ticker;
+  state.time = els.time.value.trim();
+  publish();
+  render();
+}
+
+function setVariant(variant) {
+  state.variant = variant;
+  publish();
+  render();
+}
+
+function render() {
+  els.tag.value = state.tag;
+  els.headline.value = state.headline;
+  els.subhead.value = state.subhead;
+  els.ticker.value = state.ticker;
+  els.time.value = state.time;
+  els.miniTag.setAttribute('data-label', state.tag);
+  els.miniHeadline.textContent = state.headline;
+  els.miniLive.style.display = state.live ? 'flex' : 'none';
+  els.visibleState.textContent = state.visible ? 'ON' : 'OFF';
+  els.variantState.textContent = state.variant === 'headline' ? 'HDL' : (state.variant === 'simple' ? 'ZOC' : 'BRK');
+  els.liveState.textContent = state.live ? 'LIVE' : 'NO';
+  ['breaking', 'headline', 'simple'].forEach(variant => {
+    document.getElementById(`variant-${variant}`).classList.toggle('active', state.variant === variant);
+  });
+}
+
+document.getElementById('variant-breaking').addEventListener('click', () => setVariant('breaking'));
+document.getElementById('variant-headline').addEventListener('click', () => setVariant('headline'));
+document.getElementById('variant-simple').addEventListener('click', () => setVariant('simple'));
+document.getElementById('btn-show').addEventListener('click', () => { state.visible = true; applyForm(); });
+document.getElementById('btn-hide').addEventListener('click', () => { state.visible = false; applyForm(); });
+document.getElementById('btn-live').addEventListener('click', () => { state.live = !state.live; applyForm(); });
+document.querySelectorAll('input, textarea').forEach(input => {
+  input.addEventListener('keydown', event => {
+    if (event.key === 'Enter' && input.tagName !== 'TEXTAREA') applyForm();
+  });
+});
+els.ticker.addEventListener('keydown', event => {
+  if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) applyForm();
+});
+document.querySelectorAll('[data-template]').forEach(button => {
+  button.addEventListener('click', () => {
+    state = { ...state, ...templates[button.dataset.template], visible: true };
+    publish();
+    render();
+  });
+});
+document.addEventListener('keydown', event => {
+  const tag = document.activeElement.tagName;
+  if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+  if (event.code === 'Space') { event.preventDefault(); state.visible = !state.visible; publish(); render(); }
+  if (event.code === 'Digit1') setVariant('breaking');
+  if (event.code === 'Digit2') setVariant('headline');
+  if (event.code === 'Digit3') setVariant('simple');
+  if (event.code === 'KeyL') { state.live = !state.live; publish(); render(); }
+});
+
+publish();
+render();
+</script>
+</body>
+</html>

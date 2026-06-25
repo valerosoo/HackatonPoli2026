@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, height=1080">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet">
+<title>Politon - Graph Noticiero</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  :root {
+    --bg:#060e1c;
+    --panel:#0a1525;
+    --panel2:#0c1e36;
+    --gold:#C4A055;
+    --cream:#E8DCC8;
+    --muted:#B8A88A;
+    --ink:#071126;
+    --white:#fff;
+  }
+  html, body {
+    width:1920px;
+    height:1080px;
+    overflow:hidden;
+    background:transparent;
+    font-family:'Roboto Condensed', Arial, sans-serif;
+  }
+  .graph {
+    position:absolute;
+    left:160px;
+    right:150px;
+    bottom:105px;
+    height:178px;
+    filter:drop-shadow(0 12px 12px rgba(0,0,0,.45));
+    opacity:0;
+    transform:translateY(28px);
+    transition:opacity .25s ease, transform .25s ease;
+  }
+  .graph.visible {
+    opacity:1;
+    transform:translateY(0);
+  }
+  .main-plate {
+    position:absolute;
+    left:340px;
+    right:28px;
+    top:42px;
+    height:92px;
+    background:linear-gradient(90deg, #b8a88a 0%, #f3ead7 24%, #e8dcc8 56%, #9b8554 100%);
+    clip-path:polygon(2.5% 0, 100% 0, 96.5% 100%, 0 100%);
+    border-top:4px solid rgba(255,255,255,.62);
+    border-bottom:2px solid rgba(196,160,85,.7);
+  }
+  .main-plate::after {
+    content:'';
+    position:absolute;
+    inset:0;
+    background:linear-gradient(110deg, transparent 0 38%, rgba(255,255,255,.72) 48%, transparent 60%);
+    opacity:.55;
+  }
+  .headline {
+    position:absolute;
+    left:410px;
+    right:270px;
+    top:58px;
+    color:var(--ink);
+    font-family:'Montserrat', Arial, sans-serif;
+    font-size:56px;
+    line-height:.96;
+    font-weight:900;
+    letter-spacing:1px;
+    text-transform:uppercase;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    text-shadow:0 2px 0 rgba(255,255,255,.55);
+  }
+  .subhead {
+    position:absolute;
+    left:414px;
+    right:310px;
+    top:110px;
+    color:#111833;
+    font-size:24px;
+    line-height:1;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .tag {
+    position:absolute;
+    left:70px;
+    top:42px;
+    width:310px;
+    height:92px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:linear-gradient(180deg, #102b55 0%, #0a1525 62%, #060e1c 100%);
+    color:var(--cream);
+    clip-path:polygon(0 0, 92% 0, 100% 100%, 5% 100%);
+    border-top:3px solid rgba(232,220,200,.72);
+    border-bottom:3px solid rgba(196,160,85,.7);
+    overflow:hidden;
+  }
+  .tag::before {
+    content:'';
+    position:absolute;
+    inset:0;
+    background:linear-gradient(105deg, transparent 0 38%, rgba(255,255,255,.32) 48%, transparent 60%);
+  }
+  .tag-logo {
+    position:relative;
+    z-index:2;
+    width:142px;
+    height:88px;
+    background:url('../files/Polito.png') center bottom / contain no-repeat;
+    filter:drop-shadow(0 6px 6px rgba(0,0,0,.42));
+    transform:translateY(4px);
+  }
+  .live-box {
+    position:absolute;
+    right:28px;
+    top:42px;
+    width:245px;
+    height:92px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    background:linear-gradient(180deg, #102b55, #0a1525 66%, #060e1c);
+    color:var(--cream);
+    clip-path:polygon(14% 0, 100% 0, 92% 100%, 0 100%);
+    border-top:3px solid rgba(232,220,200,.6);
+    border-bottom:3px solid rgba(196,160,85,.74);
+    text-transform:uppercase;
+  }
+  .live-box .live {
+    font-family:'Montserrat', Arial, sans-serif;
+    font-size:48px;
+    line-height:.9;
+    font-weight:900;
+    text-shadow:2px 2px 0 rgba(0,0,0,.45);
+  }
+  .live-box .report {
+    font-size:22px;
+    font-weight:700;
+    line-height:1;
+  }
+  .ticker {
+    position:absolute;
+    left:300px;
+    right:120px;
+    bottom:0;
+    height:32px;
+    display:flex;
+    align-items:center;
+    background:linear-gradient(90deg, #102b55, #0a1525 60%, #060e1c);
+    color:var(--cream);
+    clip-path:polygon(2% 0, 100% 0, 98.5% 100%, 0 100%);
+    border-top:1px solid rgba(196,160,85,.72);
+    font-size:19px;
+    font-weight:700;
+    overflow:hidden;
+  }
+  .ticker span {
+    display:block;
+    padding-left:34px;
+    white-space:nowrap;
+  }
+  .time {
+    position:absolute;
+    right:80px;
+    bottom:0;
+    height:32px;
+    min-width:122px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:var(--cream);
+    color:var(--ink);
+    font-size:23px;
+    font-weight:700;
+    clip-path:polygon(12% 0, 100% 0, 92% 100%, 0 100%);
+  }
+  .polito {
+    display:none;
+  }
+  .graph.headline-mode .tag {
+    left:54px;
+    top:4px;
+    width:284px;
+    height:118px;
+    clip-path:polygon(0 0, 100% 0, 84% 100%, 0 100%);
+  }
+  .graph.headline-mode .tag-logo {
+    width:156px;
+    height:110px;
+  }
+  .graph.headline-mode .main-plate {
+    left:318px;
+    top:4px;
+    height:118px;
+  }
+  .graph.headline-mode .headline {
+    left:372px;
+    top:32px;
+    font-size:54px;
+  }
+  .graph.headline-mode .subhead {
+    left:376px;
+    top:87px;
+  }
+  .graph.headline-mode .live-box { display:none; }
+  .graph.headline-mode .polito {
+    right:32px;
+    top:-90px;
+    width:190px;
+  }
+  .graph.headline-mode .ticker {
+    left:344px;
+    right:118px;
+    bottom:18px;
+    height:28px;
+  }
+  .graph.headline-mode .time { bottom:18px; }
+  .graph.simple-mode .live-box { display:none; }
+  .graph.simple-mode .polito {
+    right:6px;
+    top:-96px;
+    width:196px;
+  }
+  .graph.simple-mode .headline {
+    left:405px;
+    right:120px;
+    font-size:64px;
+    top:60px;
+  }
+  .graph.simple-mode .subhead {
+    left:409px;
+    right:145px;
+  }
+  .graph.simple-mode .tag {
+    top:42px;
+    width:285px;
+    height:92px;
+  }
+  .graph.simple-mode .tag-logo {
+    width:142px;
+    height:88px;
+  }
+</style>
+</head>
+<body>
+<section class="graph visible" id="graph">
+  <div class="polito"></div>
+  <div class="main-plate"></div>
+  <div class="tag" id="tag"><div class="tag-logo" aria-label="Polito"></div></div>
+  <div class="headline" id="headline">Ultimo momento</div>
+  <div class="subhead" id="subhead">Informacion en desarrollo</div>
+  <div class="live-box" id="live-box">
+    <div class="live">Live</div>
+    <div class="report">Report</div>
+  </div>
+  <div class="ticker"><span id="ticker">NewsLine informacion de ultimo momento para la transmision en vivo.</span></div>
+  <div class="time" id="time">21:10</div>
+</section>
+
+<script>
+const STORAGE_KEY = 'politon-news-graph-state-v1';
+const CHANNEL_NAME = 'politon-news-graph-live';
+const channel = 'BroadcastChannel' in window ? new BroadcastChannel(CHANNEL_NAME) : null;
+
+const defaults = {
+  visible: true,
+  variant: 'breaking',
+  tag: 'Breaking News',
+  headline: 'Ultimo momento',
+  subhead: 'Informacion en desarrollo',
+  ticker: 'NewsLine informacion de ultimo momento para la transmision en vivo.',
+  time: '',
+  live: true
+};
+
+let state = loadState();
+
+const els = {
+  graph: document.getElementById('graph'),
+  tag: document.getElementById('tag'),
+  headline: document.getElementById('headline'),
+  subhead: document.getElementById('subhead'),
+  ticker: document.getElementById('ticker'),
+  time: document.getElementById('time'),
+  live: document.getElementById('live-box')
+};
+
+function loadState() {
+  try {
+    return { ...defaults, ...JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}') };
+  } catch (err) {
+    return { ...defaults };
+  }
+}
+
+function clock() {
+  const now = new Date();
+  return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+}
+
+function render() {
+  els.graph.className = `graph ${state.visible ? 'visible' : ''} ${state.variant}-mode`;
+  els.tag.setAttribute('data-label', state.tag || defaults.tag);
+  els.headline.textContent = state.headline || defaults.headline;
+  els.subhead.textContent = state.subhead || defaults.subhead;
+  els.ticker.textContent = state.ticker || defaults.ticker;
+  els.time.textContent = state.time || clock();
+  els.live.style.display = state.live ? 'flex' : 'none';
+}
+
+render();
+setInterval(render, 1000);
+window.addEventListener('storage', event => {
+  if (event.key === STORAGE_KEY) {
+    state = loadState();
+    render();
+  }
+});
+if (channel) {
+  channel.addEventListener('message', event => {
+    state = { ...defaults, ...event.data };
+    render();
+  });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+<title>Politon - Overlay Redes</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body {
+    width:1920px; height:1080px;
+    overflow:hidden;
+    background:transparent;
+    font-family:"Libre Baskerville", Georgia, serif;
+  }
+  body.chroma { background:#00ff00; }
+
+  .social-strip {
+    position:absolute;
+    left:74px;
+    right:74px;
+    bottom:74px;
+    min-height:132px;
+    display:grid;
+    grid-template-columns:18px 1fr 18px;
+    filter:drop-shadow(0 18px 28px rgba(0,0,0,.42));
+  }
+
+  .gold-bar {
+    background:#C4A055;
+    border-top:2px solid rgba(255,255,255,.18);
+    border-bottom:2px solid rgba(0,0,0,.25);
+  }
+
+  .plate {
+    position:relative;
+    display:grid;
+    grid-template-columns:repeat(4, minmax(0, 1fr));
+    gap:18px;
+    align-items:center;
+    padding:26px 34px;
+    background:linear-gradient(135deg,rgba(6,14,28,.98) 0%,rgba(12,26,46,.96) 100%);
+    border-top:1.5px solid rgba(196,160,85,.76);
+    border-bottom:1.5px solid rgba(196,160,85,.76);
+  }
+
+  .plate::before {
+    content:"";
+    position:absolute;
+    inset:9px;
+    border:1px solid rgba(196,160,85,.22);
+    pointer-events:none;
+  }
+
+  .plate::after {
+    content:"";
+    position:absolute;
+    left:50%;
+    top:17px;
+    width:156px;
+    height:4px;
+    background:#C4A055;
+    opacity:.82;
+    transform:translateX(-50%);
+  }
+
+  .corner {
+    position:absolute;
+    width:24px;
+    height:24px;
+    pointer-events:none;
+    z-index:2;
+  }
+  .corner.tl { top:-1.5px; left:-18px; border-top:3px solid #C4A055; border-left:3px solid #C4A055; }
+  .corner.tr { top:-1.5px; right:-18px; border-top:3px solid #C4A055; border-right:3px solid #C4A055; }
+  .corner.bl { bottom:-1.5px; left:-18px; border-bottom:3px solid #C4A055; border-left:3px solid #C4A055; }
+  .corner.br { bottom:-1.5px; right:-18px; border-bottom:3px solid #C4A055; border-right:3px solid #C4A055; }
+
+  .social {
+    position:relative;
+    z-index:1;
+    display:grid;
+    grid-template-columns:62px minmax(0, 1fr);
+    gap:16px;
+    align-items:center;
+    min-width:0;
+  }
+
+  .social.is-hidden { display:none; }
+
+  .icon {
+    width:62px;
+    height:62px;
+    display:grid;
+    place-items:center;
+    color:#060e1c;
+    background:#C4A055;
+    border:1.5px solid rgba(255,255,255,.18);
+  }
+
+  .icon svg {
+    width:34px;
+    height:34px;
+    fill:currentColor;
+  }
+
+  .copy {
+    min-width:0;
+    display:grid;
+    gap:4px;
+  }
+
+  .label {
+    color:#C4A055;
+    font-size:18px;
+    line-height:1;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:0;
+  }
+
+  .handle {
+    max-width:100%;
+    color:#f7f0df;
+    font-family:"Playfair Display", Georgia, serif;
+    font-size:34px;
+    line-height:1.04;
+    font-weight:900;
+    text-transform:uppercase;
+    letter-spacing:0;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+
+  .controls {
+    position:absolute;
+    top:28px;
+    right:28px;
+    width:430px;
+    max-height:1018px;
+    overflow:auto;
+    padding:18px;
+    display:grid;
+    gap:12px;
+    color:#f7f0df;
+    background:rgba(6,14,28,.94);
+    border:1px solid rgba(196,160,85,.55);
+    font:16px/1.3 Arial, sans-serif;
+  }
+
+  .controls label {
+    display:grid;
+    gap:6px;
+    color:#C4A055;
+    font-weight:700;
+  }
+
+  .field-row {
+    display:grid;
+    grid-template-columns:24px 1fr;
+    gap:10px;
+    align-items:end;
+  }
+
+  .field-row input[type="checkbox"] {
+    width:20px;
+    height:20px;
+    accent-color:#C4A055;
+  }
+
+  .controls input[type="text"] {
+    width:100%;
+    padding:10px 12px;
+    color:#f7f0df;
+    background:#0b1525;
+    border:1px solid rgba(196,160,85,.44);
+    font:16px/1.2 Arial, sans-serif;
+    outline:none;
+  }
+
+  .button-row {
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+  }
+
+  .controls button {
+    min-height:38px;
+    color:#060e1c;
+    background:#C4A055;
+    border:none;
+    font:700 14px/1 Arial, sans-serif;
+    cursor:pointer;
+  }
+
+  .capture .controls { display:none; }
+  .capture .handle { cursor:text; }
+</style>
+</head>
+<body class="chroma">
+<main class="social-strip" aria-label="Redes sociales">
+  <div class="gold-bar"></div>
+  <section class="plate">
+    <div class="corner tl"></div>
+    <div class="corner tr"></div>
+    <div class="corner bl"></div>
+    <div class="corner br"></div>
+
+    <article class="social" data-network="facebook">
+      <div class="icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M15.1 8.2H13V6.8c0-.6.4-.8.8-.8h1.2V3.8c-.6-.1-1.3-.2-2-.2-2.1 0-3.5 1.3-3.5 3.6v1H7.2v2.5h2.3v6.1H13v-6.1h1.8l.3-2.5Z"/></svg>
+      </div>
+      <div class="copy">
+        <p class="label">Facebook</p>
+        <p class="handle" id="facebookText" contenteditable="true" spellcheck="false">Politon 2026</p>
+      </div>
+    </article>
+
+    <article class="social" data-network="instagram">
+      <div class="icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M8 4h8c2.2 0 4 1.8 4 4v8c0 2.2-1.8 4-4 4H8c-2.2 0-4-1.8-4-4V8c0-2.2 1.8-4 4-4Zm0 2.2c-1 0-1.8.8-1.8 1.8v8c0 1 .8 1.8 1.8 1.8h8c1 0 1.8-.8 1.8-1.8V8c0-1-.8-1.8-1.8-1.8H8Zm4 2.5a3.3 3.3 0 1 1 0 6.6 3.3 3.3 0 0 1 0-6.6Zm0 2.1a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 0 0 0-2.4Zm4-2.3a.8.8 0 1 1 0 1.6.8.8 0 0 1 0-1.6Z"/></svg>
+      </div>
+      <div class="copy">
+        <p class="label">Instagram</p>
+        <p class="handle" id="instagramText" contenteditable="true" spellcheck="false">@politon2026</p>
+      </div>
+    </article>
+
+    <article class="social" data-network="twitch">
+      <div class="icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M5 4h15v10.5l-4 4h-3l-2.5 2.5H8v-2.5H5V4Zm2.3 2.3v9.9h3v2.1l2.1-2.1h3.2l2.1-2.1V6.3H7.3Zm4.1 2.4h1.8v5h-1.8v-5Zm4.4 0h1.8v5h-1.8v-5Z"/></svg>
+      </div>
+      <div class="copy">
+        <p class="label">Twitch</p>
+        <p class="handle" id="twitchText" contenteditable="true" spellcheck="false">politon2026</p>
+      </div>
+    </article>
+
+    <article class="social" data-network="youtube">
+      <div class="icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M20.2 7.1c.2.8.3 2.5.3 4.9s-.1 4.1-.3 4.9c-.2.9-.9 1.5-1.8 1.7-1.6.3-6.4.3-6.4.3s-4.8 0-6.4-.3c-.9-.2-1.6-.8-1.8-1.7-.2-.8-.3-2.5-.3-4.9s.1-4.1.3-4.9c.2-.9.9-1.5 1.8-1.7C7.2 5.1 12 5.1 12 5.1s4.8 0 6.4.3c.9.2 1.6.8 1.8 1.7ZM10.3 15.1l4.8-3.1-4.8-3.1v6.2Z"/></svg>
+      </div>
+      <div class="copy">
+        <p class="label">YouTube</p>
+        <p class="handle" id="youtubeText" contenteditable="true" spellcheck="false">Politon 2026</p>
+      </div>
+    </article>
+  </section>
+  <div class="gold-bar"></div>
+</main>
+
+<aside class="controls" aria-label="Controles de edicion">
+  <div class="field-row">
+    <input id="facebookVisible" type="checkbox" checked>
+    <label>Facebook<input id="facebookInput" type="text" value="Politon 2026"></label>
+  </div>
+  <div class="field-row">
+    <input id="instagramVisible" type="checkbox" checked>
+    <label>Instagram<input id="instagramInput" type="text" value="@politon2026"></label>
+  </div>
+  <div class="field-row">
+    <input id="twitchVisible" type="checkbox" checked>
+    <label>Twitch<input id="twitchInput" type="text" value="politon2026"></label>
+  </div>
+  <div class="field-row">
+    <input id="youtubeVisible" type="checkbox" checked>
+    <label>YouTube<input id="youtubeInput" type="text" value="Politon 2026"></label>
+  </div>
+  <div class="button-row">
+    <button id="toggleBg">Fondo verde</button>
+    <button id="capture">Captura</button>
+  </div>
+</aside>
+
+<script>
+const p = new URLSearchParams(location.search);
+const networks = ["facebook", "instagram", "twitch", "youtube"];
+const defaults = {
+  facebook:"Politon 2026",
+  instagram:"@politon2026",
+  twitch:"politon2026",
+  youtube:"Politon 2026"
+};
+
+function updateVisibility(network) {
+  const visible = document.getElementById(network + "Visible").checked;
+  document.querySelector('[data-network="' + network + '"]').classList.toggle("is-hidden", !visible);
+}
+
+function setNetwork(network, value) {
+  const text = document.getElementById(network + "Text");
+  const input = document.getElementById(network + "Input");
+  text.textContent = value;
+  input.value = value;
+}
+
+networks.forEach((network) => {
+  const value = p.get(network) || defaults[network];
+  setNetwork(network, value);
+  const visibleParam = p.get(network + "Visible");
+  if (visibleParam === "false" || visibleParam === "0") {
+    document.getElementById(network + "Visible").checked = false;
+  }
+  updateVisibility(network);
+
+  document.getElementById(network + "Input").addEventListener("input", (event) => {
+    document.getElementById(network + "Text").textContent = event.target.value || " ";
+  });
+  document.getElementById(network + "Text").addEventListener("input", (event) => {
+    document.getElementById(network + "Input").value = event.target.textContent.trim();
+  });
+  document.getElementById(network + "Visible").addEventListener("change", () => updateVisibility(network));
+});
+
+if (p.get("bg") === "transparent") document.body.classList.remove("chroma");
+
+document.getElementById("toggleBg").addEventListener("click", () => document.body.classList.toggle("chroma"));
+document.getElementById("capture").addEventListener("click", () => document.body.classList.toggle("capture"));
+
+document.addEventListener("keydown", (event) => {
+  if (event.key.toLowerCase() === "c") document.body.classList.toggle("capture");
+  if (event.key.toLowerCase() === "g") document.body.classList.toggle("chroma");
+});
+</script>
+</body>
+</html>

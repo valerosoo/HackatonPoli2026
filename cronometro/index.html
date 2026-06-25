@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, height=1080">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+<title>Politon - Cronometro</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  :root {
+    --bg:#060e1c;
+    --panel:#0a1525;
+    --panel2:#0d1a2b;
+    --gold:#C4A055;
+    --cream:#E8DCC8;
+    --muted:#B8A88A;
+    --red:#E14646;
+  }
+  html, body {
+    width:1920px;
+    height:1080px;
+    overflow:hidden;
+    background:transparent;
+    color:var(--cream);
+    font-family:'Libre Baskerville',serif;
+  }
+  .stage {
+    position:absolute;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .timer {
+    position:relative;
+    width:920px;
+    height:300px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:linear-gradient(145deg, rgba(10,21,37,.96), rgba(6,14,28,.94) 58%, rgba(12,26,46,.92));
+    border:2px solid rgba(196,160,85,.62);
+    box-shadow:0 0 34px rgba(0,0,0,.46), inset 0 0 28px rgba(196,160,85,.07);
+    overflow:hidden;
+  }
+  .timer::before {
+    content:'';
+    position:absolute;
+    inset:0;
+    background-image:
+      repeating-linear-gradient(90deg, transparent 0, transparent 59px, rgba(196,160,85,.04) 59px, rgba(196,160,85,.04) 60px),
+      radial-gradient(ellipse 54% 120% at 50% 52%, rgba(196,160,85,.12), transparent 68%);
+    pointer-events:none;
+  }
+  .timer::after {
+    content:'';
+    position:absolute;
+    inset:18px;
+    border:1px solid rgba(196,160,85,.18);
+    pointer-events:none;
+  }
+  .corner {
+    position:absolute;
+    width:34px;
+    height:34px;
+    z-index:3;
+    border-color:var(--gold);
+    border-style:solid;
+    opacity:.78;
+  }
+  .tl { top:12px; left:12px; border-width:2px 0 0 2px; }
+  .tr { top:12px; right:12px; border-width:2px 2px 0 0; }
+  .bl { bottom:12px; left:12px; border-width:0 0 2px 2px; }
+  .br { bottom:12px; right:12px; border-width:0 2px 2px 0; }
+  .content {
+    position:relative;
+    z-index:2;
+    width:100%;
+    text-align:center;
+  }
+  .label {
+    margin-bottom:14px;
+    color:rgba(196,160,85,.78);
+    font-size:18px;
+    letter-spacing:.36em;
+    text-transform:uppercase;
+  }
+  .display {
+    font-family:'Playfair Display',serif;
+    font-size:156px;
+    line-height:.9;
+    font-weight:900;
+    color:var(--cream);
+    font-variant-numeric:tabular-nums;
+    text-shadow:0 0 28px rgba(196,160,85,.42), 0 4px 16px rgba(0,0,0,.9);
+  }
+  .display.warning { color:var(--red); }
+  .status {
+    margin-top:18px;
+    color:rgba(184,168,138,.72);
+    font-size:13px;
+    letter-spacing:.28em;
+    text-transform:uppercase;
+  }
+</style>
+</head>
+<body>
+<main class="stage">
+  <section class="timer" id="timer">
+    <div class="corner tl"></div>
+    <div class="corner tr"></div>
+    <div class="corner bl"></div>
+    <div class="corner br"></div>
+    <div class="content">
+      <div class="label" id="label">Cronometro</div>
+      <div class="display" id="display">00:00:00</div>
+      <div class="status" id="status">Listo</div>
+    </div>
+  </section>
+</main>
+
+<script>
+const STORAGE_KEY = 'politon-cronometro-state-v1';
+const CHANNEL_NAME = 'politon-cronometro-live';
+const channel = 'BroadcastChannel' in window ? new BroadcastChannel(CHANNEL_NAME) : null;
+
+const defaults = {
+  mode: 'stopwatch',
+  running: false,
+  baseElapsed: 0,
+  duration: 300,
+  startedAt: 0,
+  updatedAt: Date.now(),
+  label: 'Cronometro'
+};
+
+let state = { ...defaults };
+
+const els = {
+  label: document.getElementById('label'),
+  display: document.getElementById('display'),
+  status: document.getElementById('status')
+};
+
+function readState() {
+  try {
+    state = { ...defaults, ...JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}') };
+  } catch (err) {
+    state = { ...defaults };
+  }
+}
+
+function currentSeconds() {
+  const extra = state.running ? Math.floor((Date.now() - state.startedAt) / 1000) : 0;
+  if (state.mode === 'timer') return Math.max(0, state.duration - state.baseElapsed - extra);
+  return Math.max(0, state.baseElapsed + extra);
+}
+
+function pad(value) {
+  return String(value).padStart(2, '0');
+}
+
+function formatTime(seconds) {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  return `${pad(h)}:${pad(m)}:${pad(s)}`;
+}
+
+function render() {
+  const seconds = currentSeconds();
+  const isFinished = state.mode === 'timer' && seconds === 0 && (state.running || state.baseElapsed >= state.duration);
+  els.label.textContent = state.mode === 'timer' ? 'Timer' : 'Cronometro';
+  els.display.textContent = formatTime(seconds);
+  els.display.classList.toggle('warning', isFinished || (state.mode === 'timer' && seconds <= 10 && state.duration > 10));
+  els.status.textContent = isFinished ? 'Tiempo cumplido' : (state.running ? 'En vivo' : 'Pausado');
+}
+
+readState();
+render();
+setInterval(render, 250);
+window.addEventListener('storage', event => {
+  if (event.key === STORAGE_KEY) {
+    readState();
+    render();
+  }
+});
+if (channel) {
+  channel.addEventListener('message', event => {
+    state = { ...defaults, ...event.data };
+    render();
+  });
+}
+</script>
+</body>
+</html>
